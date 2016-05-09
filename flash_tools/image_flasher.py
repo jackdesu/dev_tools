@@ -2,22 +2,27 @@ import subprocess
 import os
 import time
 
+DEBUG = True
+
 IMAGE_ROOT_PATH = """please specify your image dir path here"""
-BOOT_NAME = "bootd"
+BOOT_NAME = "boot"
 SYSTEM_NAME = "system"
-CACHE_NAME = "cached"
+CACHE_NAME = "cache"
 USERDATA_NAME = "userdata"
 IMAGE_EXTENSION = ".img"
 ADB = "adb"
 FASTBOOT = "fastboot"
 FLASH_COMMAND = "flash"
 ARG_REBOOT_TO_BOOTLOADER = "reboot-bootloader"
+ARG_REBOOT = "reboot"
 ARG_DEVICE_SPECIFY = "-s"
 
 FULL_UPDATE_PARTITION = [BOOT_NAME, SYSTEM_NAME, CACHE_NAME, USERDATA_NAME]
 
+
 def execute_command(*args):
-    print "execute_command: ", args
+    if DEBUG:
+        print "execute_command: ", args
     device_popen = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return device_popen.communicate()
 
@@ -85,6 +90,7 @@ def on_flash_complete(device_id, result):
             if result[index] is False:
                 failure_partition_list.append(index)
         generate_flash_complete_report(device_id, failure_partition_list)
+        print "Update complete"
 
 
 def generate_flash_complete_report(device_id, failure_partition_list):
@@ -92,8 +98,6 @@ def generate_flash_complete_report(device_id, failure_partition_list):
         print "device:", device_id, "update complete but some partition cannot be updated correctly :"
         for index in range(0, len(failure_partition_list), 1):
             print "[", FULL_UPDATE_PARTITION[failure_partition_list[index]], "]"
-    else:
-        print "all success"
 
 
 def reboot_to_bootloader(tool, ids):
@@ -102,37 +106,38 @@ def reboot_to_bootloader(tool, ids):
 
 
 def reboot_to_bootloader_with_adb():
-    device_ids = get_device_id_adb()
-    if len(device_ids) > 0:
-        reboot_to_bootloader(ADB, device_ids)
+    device_ids_w_adb = get_device_id_adb()
+    if len(device_ids_w_adb) > 0:
+        reboot_to_bootloader(ADB, device_ids_w_adb)
 
     retry_count = 1
     while True:
-        device_ids = get_device_id_fastboot()
+        device_ids_w_fastboot = get_device_id_fastboot()
 
         if retry_count > 4:
             print "reboot to bootloader timeout with", retry_count, "tries."
             break
 
-        if not len(device_ids) > 0:
+        if not len(device_ids_w_fastboot) != device_ids_w_adb:
             retry_count += 1
-            time.sleep(1)
+            time.sleep(3)
             print retry_count
             continue
         else:
             break
-    return device_ids
+    return device_ids_w_adb
 
 
 def flash_devices(device_ids):
     total_result = {}
     if len(device_ids) > 0:
-        device_result = list()
         for device_idx in range(0, len(device_ids)):
-            print device_ids[device_idx]
+            device_result = list()
+            current_device_id = device_ids[device_idx]
             for partition_idx in range(0, len(FULL_UPDATE_PARTITION)):
-                device_result.append(flash_img(str(device_ids[device_idx]), FULL_UPDATE_PARTITION[partition_idx]))
-        total_result[device_idx] = device_result
+                device_result.append(flash_img(current_device_id, FULL_UPDATE_PARTITION[partition_idx]))
+            execute_command(FASTBOOT_TOOL, ARG_DEVICE_SPECIFY, current_device_id, ARG_REBOOT)
+            total_result[device_idx] = device_result
     else:
         print "no device connected"
 

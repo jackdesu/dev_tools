@@ -110,22 +110,25 @@ def reboot_to_bootloader_with_adb():
     if len(device_ids_w_adb) > 0:
         reboot_to_bootloader(ADB, device_ids_w_adb)
 
-    retry_count = 1
-    while True:
-        device_ids_w_fastboot = get_device_id_fastboot()
+        retry_count = 1
+        while True:
+            device_ids_w_fastboot = get_device_id_fastboot()
 
-        if retry_count > 4:
-            print "reboot to bootloader timeout with", retry_count, "tries."
-            break
+            if retry_count > 4:
+                print "reboot to bootloader timeout with", retry_count, "tries."
+                break
 
-        if not len(device_ids_w_fastboot) != device_ids_w_adb:
-            retry_count += 1
-            time.sleep(3)
-            print retry_count
-            continue
-        else:
-            break
-    return device_ids_w_adb
+            if not len(device_ids_w_fastboot) != device_ids_w_adb:
+                retry_count += 1
+                time.sleep(3)
+                print retry_count
+                continue
+            else:
+                break
+        return device_ids_w_adb
+    else:
+        print "No device connected!"
+        return {}
 
 
 def flash_devices(device_ids):
@@ -145,5 +148,6 @@ def flash_devices(device_ids):
 
 
 boot_loader_device_ids = reboot_to_bootloader_with_adb()
-flash_results = flash_devices(boot_loader_device_ids)
-on_devices_flash_complete(flash_results)
+if len(boot_loader_device_ids) > 0:
+    flash_results = flash_devices(boot_loader_device_ids)
+    on_devices_flash_complete(flash_results)

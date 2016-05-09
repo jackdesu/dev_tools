@@ -4,6 +4,7 @@ import time
 
 DEBUG = True
 
+IMAGE_ROOT_PATH = """please specify your image dir path here"""
 BOOT_NAME = "boot"
 SYSTEM_NAME = "system"
 CACHE_NAME = "cache"
@@ -17,6 +18,7 @@ ARG_REBOOT = "reboot"
 ARG_DEVICE_SPECIFY = "-s"
 
 FULL_UPDATE_PARTITION = [BOOT_NAME, SYSTEM_NAME, CACHE_NAME, USERDATA_NAME]
+
 
 def execute_command(*args):
     if DEBUG:

@@ -1,8 +1,13 @@
- This is a tool to automatically update device with given dir
- It will update following imgs
- cache, boot, system and userdata.
+To batch (in parallel) flash device with adb and fastboot tool
+Simply run python image_flasher.py and it will automatically update decives.
 
- Please ensure all devices are stay in status which adb can connect with.
- (Because this script uses "adb devices" to detect # of devices and ids.)
+Initial condition:
+1 Please ensure your adb, fastboot tool are available in search path.
+(Script uses 'which adb' to get full adb path)
 
- If you have any problem, welcome to drop me a message.
+2 Please specify your image folder in variable IMAGE_ROOT_PATH
+
+3 If output log is annoying, just set DEBUG to False
+
+I plan to read variable from a configuration file, ex XXX.config.
+Just a TBD.
